@@ -188,3 +188,7 @@ npm run dev
 - Better analytics (late arrivals, heatmaps)
 - Deployment: Docker + CI + production CORS + HTTPS
 
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+

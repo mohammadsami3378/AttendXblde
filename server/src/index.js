@@ -38,7 +38,9 @@ app.use(
     legacyHeaders: false,
   })
 );
-
+app.get("/", (req, res) => {
+  res.send("AttendX API is running 🚀");
+});
 app.get("/api/health", (req, res) => {
   res.json({ ok: true, service: "smart-attendance-api", time: new Date() });
 });
