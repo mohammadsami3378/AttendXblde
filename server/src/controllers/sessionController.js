@@ -100,7 +100,7 @@ async function generateDailySession(req, res, next) {
   }
 }
 
-// 🔥 GET ACTIVE SESSION (THIS WAS MISSING ❌)
+// 🔥 GET ACTIVE SESSION
 async function getActiveSession(req, res, next) {
   try {
     const dateKey = req.query.date
@@ -122,7 +122,6 @@ async function getActiveSession(req, res, next) {
   }
 }
 
-// ✅ EXPORT FIX (VERY IMPORTANT)
 module.exports = {
   generateDailySession,
   getActiveSession,
