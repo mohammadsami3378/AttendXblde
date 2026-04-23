@@ -32,11 +32,12 @@ async function markAttendance(req, res, next) {
       return res.status(400).json({ message: "Invalid QR payload." });
     }
 
-    const { sessionId, issuedAt } = payload;
+    // ✅ FIX: ONLY sessionId needed
+    const { sessionId } = payload;
 
-    if (!sessionId || !issuedAt) {
+    if (!sessionId) {
       return res.status(400).json({
-        message: "Invalid QR payload: missing sessionId/issuedAt.",
+        message: "Invalid QR payload.",
       });
     }
 
@@ -49,30 +50,16 @@ async function markAttendance(req, res, next) {
 
     const now = new Date();
 
-    // Check expiry
-    if (session.expiresAt <= now) {
+    // ✅ FIX: Add small buffer (30 sec)
+    const bufferTime = 30 * 1000;
+
+    if (session.expiresAt.getTime() + bufferTime <= now.getTime()) {
       return res.status(400).json({
         message: "QR code expired. Ask admin to regenerate.",
       });
     }
 
-    // Validate issuedAt
-    const issuedAtMs = Number(issuedAt);
-    if (Number.isNaN(issuedAtMs)) {
-      return res.status(400).json({ message: "Invalid issuedAt." });
-    }
-
-    if (
-      Math.abs(
-        issuedAtMs - new Date(session.createdAt).getTime()
-      ) > 10 * 60 * 1000
-    ) {
-      return res.status(400).json({
-        message: "QR code is not valid for this session.",
-      });
-    }
-
-    // 🔥 IMPORTANT FIX: Prevent duplicate attendance
+    // 🔥 Prevent duplicate attendance
     const existing = await Attendance.findOne({
       studentId: req.user._id,
       sessionId: session._id,
