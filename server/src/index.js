@@ -1,4 +1,4 @@
-require("dotenv").config({ override: true });
+require("dotenv").config();
 
 const express = require("express");
 const cors = require("cors");
@@ -18,21 +18,27 @@ const faceRoutes = require("./routes/faceRoutes");
 
 const app = express();
 
-// 🔥 DEBUG LOG (to confirm deployment)
-console.log("🔥 NEW CODE DEPLOYED");
+// 🔥 DEBUG LOG
+console.log("🔥 Backend starting...");
 
-// ✅ Security & Middleware
+// ✅ Security
 app.use(helmet());
 
-// ✅ TEMP FIX CORS (allow all for now)
+// ✅ CORS (will restrict later after frontend deploy)
 app.use(
   cors({
-    origin: "*",
+    origin: process.env.CLIENT_URL || "*",
+    credentials: true,
   })
 );
 
+// ✅ Body parser
 app.use(express.json({ limit: "5mb" }));
+
+// ✅ Sanitize
 app.use(sanitizeMongoInputs);
+
+// ✅ Logger
 app.use(morgan("dev"));
 
 // ✅ Rate Limiting
@@ -40,8 +46,8 @@ app.use(
   "/api",
   rateLimit({
     windowMs: 15 * 60 * 1000,
-    limit: 300,
-    standardHeaders: "draft-7",
+    max: 300,
+    standardHeaders: true,
     legacyHeaders: false,
   })
 );
@@ -51,11 +57,11 @@ app.get("/", (req, res) => {
   res.send("AttendX API is running 🚀");
 });
 
-// ✅ Health Check Route (IMPORTANT)
+// ✅ Health Route (VERY IMPORTANT FOR RENDER)
 app.get("/api/health", (req, res) => {
-  res.json({
-    ok: true,
-    service: "smart-attendance-api",
+  res.status(200).json({
+    success: true,
+    message: "API is healthy ✅",
     time: new Date(),
   });
 });
@@ -67,28 +73,28 @@ app.use("/api/attendance", attendanceRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/face", faceRoutes);
 
-// ❌ Not Found Handler
+// ❌ 404 Handler
 app.use(notFound);
 
-// ❌ Error Handler
+// ❌ Global Error Handler
 app.use(errorHandler);
 
-// ✅ PORT (Render uses process.env.PORT)
+// ✅ PORT (Render provides PORT automatically)
 const PORT = process.env.PORT || 5000;
 
 // ✅ Start Server
-async function start() {
+const startServer = async () => {
   try {
     await connectDB();
     console.log("✅ MongoDB Connected");
 
-    app.listen(PORT, () => {
+    app.listen(PORT, "0.0.0.0", () => {
       console.log(`🚀 Server running on port ${PORT}`);
     });
-  } catch (err) {
-    console.error("❌ Failed to start server:", err);
+  } catch (error) {
+    console.error("❌ Server start failed:", error);
     process.exit(1);
   }
-}
+};
 
-start();
+startServer();
